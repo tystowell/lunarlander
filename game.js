@@ -10,9 +10,12 @@ var finalVelocity = 0;
 var gameOver = false;
 var peakXPositions = [];
 var buttons = [];
+var meteors = [];
 var lastRightLeg = false;
 var lastLeftLeg = false;
 var cracksDrawn = false;
+var meteorVelocity;
+var meteorNumber;
 for(var i = 0; i < 4; i ++){
   peakXPositions.push(Math.floor(canvas.width * Math.random()));
 }
@@ -55,7 +58,7 @@ function meteor(size, position){
   this.size = size;
   this.position = position;
   this.velocity = {
-    x: 0,
+    x: meteorVelocity,
     y: 0
   };
 }
@@ -69,7 +72,7 @@ meteor.prototype.draw = function(){
 }
 
 meteor.prototype.update = function(){
-
+  this.velocity.y += GRAVITY_FORCE;
 }
 
 function Spaceship(size, position, power) {
