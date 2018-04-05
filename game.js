@@ -301,7 +301,7 @@ function gameOverScreen(){
 
 }
 
-var lander = new Spaceship(10, {x: canvas.width/2, y: 50}, 0.04);
+var lander = new Spaceship(5, {x: canvas.width/2, y: 50}, 0.04);
 
 function start(){
   drawScene();
