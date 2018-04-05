@@ -14,8 +14,8 @@ var meteors = [];
 var lastRightLeg = false;
 var lastLeftLeg = false;
 var cracksDrawn = false;
-var meteorVelocity;
-var meteorNumber;
+var meteorVelocity = 7;
+
 for(var i = 0; i < 4; i ++){
   peakXPositions.push(Math.floor(canvas.width * Math.random()));
 }
@@ -25,7 +25,7 @@ for(var i = 0; i < peakXPositions.length; i ++){
 }
 
 var randomBumps = [];
-var numberOfBumps = Math.floor(30 * (.25 * Math.random() + .75));
+var numberOfBumps = Math.floor(20 * (.25 * Math.random() + .75));
 for(var i = 0; i < numberOfBumps; i ++){
   randomBumps.push(Math.floor(canvas.width * Math.random()));
 }
@@ -58,7 +58,7 @@ function meteor(size, position){
   this.size = size;
   this.position = position;
   this.velocity = {
-    x: meteorVelocity,
+    x: meteorVelocity * (Math.random() * .1 + .95),
     y: 0
   };
 }
@@ -72,7 +72,24 @@ meteor.prototype.draw = function(){
 }
 
 meteor.prototype.update = function(){
-  this.velocity.y += GRAVITY_FORCE;
+  if(this.position.x > 0 && this.position.x < canvas.width){
+    this.velocity.y += (GRAVITY_FORCE * (Math.random() * .5 + .75));
+  }
+  this.position.x += this.velocity.x;
+  this.position.y += this.velocity.y;
+  if(this.position.x - this.size > canvas.width){
+    this.position.x = -(Math.random() * 300 + this.size);
+    this.position.y = (Math.random() * 100 + 50);
+    this.velocity.x = meteorVelocity * (Math.random() * .1 + .95);
+    this.velocity.y = 0;
+  }
+  var leftRightColliding = this.position.x + this.size > lander.leftLegX && this.position.x - this.size < lander.rightLegX;
+  var topColliding = (this.position.y - this.size < lander.leftLegY || this.position.y - this.size < lander.rightLegY);
+  var bottomColliding = (this.position.y + this.size > lander.leftLegY || this.position.y + this.size > lander.leftLegY);
+  var circleColliding = (Math.sqrt(Math.pow(this.position.x - lander.position.x, 2) + Math.pow(this.position.y - lander.position.y, 2)) < this.size + (lander.width/2));
+  if((leftRightColliding && topColliding && bottomColliding) || circleColliding){
+    gameOver = true;
+  }
 }
 
 function Spaceship(size, position, power) {
@@ -94,7 +111,6 @@ function Spaceship(size, position, power) {
   this.rightLegY;
   this.excessAngle = Math.atan((2 * this.width)/((5 * this.height) + (10 * this.width * Math.sqrt(2)))); //Angle (constant) used in many calculations.
   this.circleRadius = (this.width * Math.sqrt(2)) + (this.height/4.3); //Used for calculating positions of legs with sin() and cos(). Constant.
-  this.damage = 0; //1 is damaged + not drivable, 2 is destroyed, 3 is annihilated.
   this.impactVelocity = 0; //velocity of latest impact.
   this.speed = 0; //Current speed.
 }
@@ -150,7 +166,8 @@ Spaceship.prototype.draw = function(){
   context.closePath();
   drawRect(32, 10, 60, 20, "gray");
   drawText(Math.round(this.speed * 10)/10, 32, 28, "black");
-  if(this.damage != 0 && !cracksDrawn){
+  /*
+  if(gameOver == true && !cracksDrawn){
     for(var i = 0; i < 10; i ++){
       var x = Math.random() * canvas.width;
       var y = Math.random() * canvas.height;
@@ -169,10 +186,14 @@ Spaceship.prototype.draw = function(){
     }
     cracksDrawn = true;
   }
+  */
+  if(gameOver == true){
+    drawRect(0, 0, canvas.width, canvas.height, "black");
+  }
 }
 
 Spaceship.prototype.update = function(){//All physics happen in here (And detection for losing).
-  if(this.damage == 0){
+  if(!gameOver){
     this.rightLegX = this.position.x + Math.cos(this.angle + (Math.PI/4) + this.excessAngle) * this.circleRadius;
     this.rightLegY = this.position.y + Math.sin(this.angle + (Math.PI/4) + this.excessAngle) * this.circleRadius;//Right Leg
     this.leftLegX = this.position.x + Math.cos(this.angle + ((3 * Math.PI)/4) - this.excessAngle) * this.circleRadius;//Left Leg
@@ -237,7 +258,7 @@ Spaceship.prototype.update = function(){//All physics happen in here (And detect
 
     if(topOnGround){
       this.impactVelocity = Math.sqrt(Math.pow(this.velocity.x, 2) + Math.pow(this.velocity.y, 2));
-      this.damage = 1;
+      this.gameOver = true;
     }
 
     this.rotation += (leftLegOnGround && !rightLegOnGround) ? 0.001 : ((rightLegOnGround && !leftLegOnGround) ? -0.001 : 0);
@@ -257,15 +278,6 @@ Spaceship.prototype.update = function(){//All physics happen in here (And detect
     }
   }
   if(this.impactVelocity > 4){
-    this.damage = 1;
-    gameOver = true;
-  }
-  if(this.impactVelocity > 6){
-    this.damage = 2;
-    gameOver = true;
-  }
-  if(this.impactVelocity > 10){
-    this.damage = 3;
     gameOver = true;
   }
 }
@@ -289,7 +301,7 @@ function gameOverScreen(){
 
 }
 
-var lander = new Spaceship(10, {x:100, y:100}, 0.04);
+var lander = new Spaceship(10, {x: canvas.width/2, y: 50}, 0.04);
 
 function start(){
   drawScene();
@@ -330,11 +342,12 @@ function start(){
   });
 }
 
-function draw()
-{
+function draw(){
     context.clearRect(0, 0, canvas.width, canvas.height);
 
     drawScene();
+
+    updateMeteors();
 
     lander.update();
 
@@ -379,6 +392,20 @@ function keyDown(e){
 
 document.addEventListener('keydown', keyDown);
 
+function createMeteors(number){
+  for(var i = 0; i < number; i ++){
+    var asteroid = new meteor(20, {x: -(i * 300 * (Math.random() * .5 + .75)), y: (Math.random() * 150 + 50)});
+    meteors.push(asteroid);
+  }
+}
+
+function updateMeteors(){
+  meteors.forEach(function(asteroid){
+    asteroid.update();
+    asteroid.draw();
+  });
+}
+
 function onClick(click){
   var x = click.pageX - canvasLeftOffset;
   var y = click.pageY - canvasTopOffset;
@@ -387,16 +414,19 @@ function onClick(click){
       if(element.text == "easy"){
         lander.power = 0.04;
         document.removeEventListener('click', onClick, false);
+        createMeteors(1);
         draw();
       }
       if(element.text == "medium"){
         lander.power = 0.03;
         document.removeEventListener('click', onClick, false);
+        createMeteors(2);
         draw();
       }
       if(element.text == "hard"){
         lander.power = 0.02;
         document.removeEventListener('click', onClick, false);
+        createMeteors(3);
         draw();
       }
     }
@@ -406,3 +436,4 @@ function onClick(click){
 document.addEventListener('click', onClick, false);
 
 start();
+
