@@ -183,11 +183,13 @@ Spaceship.prototype.update = function(){//All physics happen in here (And detect
       this.velocity.x += (this.velocity.x > 0) ? -0.01 : 0.01;
     }
 
-    var topOnGround = false;
+    var topOnGround = (this.position.y + this.width/1.1) > (canvas.height - heights[Math.floor(this.position.x)]);
+
+    drawText(topOnGround, 100, 250, "gray");
 
     if(topOnGround){
       this.impactVelocity = Math.sqrt(Math.pow(this.velocity.x, 2) + Math.pow(this.velocity.y, 2));
-      this.gameOver = true;
+      gameOver = true;
     }
 
     this.rotation += (leftLegOnGround && !rightLegOnGround) ? 0.001 : ((rightLegOnGround && !leftLegOnGround) ? -0.001 : 0);
@@ -408,7 +410,7 @@ function onClick(click){
       if(element.text == "easy"){
         lander.power = 0.1;
         document.removeEventListener('click', onClick, false);
-        createMeteors(1);
+        createMeteors(50);
         draw();
       }
       if(element.text == "medium"){
