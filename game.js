@@ -6,53 +6,13 @@ var GRAVITY_FORCE = 0.01;
 var leftKey = false;
 var rightKey = false;
 var upKey = false;
-var finalVelocity = 0;
 var gameOver = false;
-var peakXPositions = [];
 var buttons = [];
 var meteors = [];
 var lastRightLeg = false;
 var lastLeftLeg = false;
-var cracksDrawn = false;
 var meteorVelocity = 7;
-
-for(var i = 0; i < 4; i ++){
-  peakXPositions.push(Math.floor(canvas.width * Math.random()));
-}
-var peakYPositions = [];
-for(var i = 0; i < peakXPositions.length; i ++){
-  peakYPositions.push((Math.random()/4 + .75) * 100);
-}
-
-var randomBumps = [];
-var numberOfBumps = Math.floor(20 * (.25 * Math.random() + .75));
-for(var i = 0; i < numberOfBumps; i ++){
-  randomBumps.push(Math.floor(canvas.width * Math.random()));
-}
-
 var heights = [];
-for(var i = 0; i < canvas.width; i ++){
-  var closest = canvas.width;
-  var closestIndex = -1;
-  for(var a = 0; a < peakXPositions.length; a ++){
-    var distance = Math.abs(peakXPositions[a] - i);
-    if(distance < closest){
-      closest = distance;
-      closestIndex = a;
-    }
-  }
-  var equation = peakYPositions[closestIndex] * Math.pow(Math.E/(200 * Math.sqrt(2 * Math.PI)), (Math.pow(closest, 2) / 80000));
-  var closestBump = canvas.width;
-  for(var a = 0; a < numberOfBumps; a ++){
-    var bumpDistance = Math.abs(i - randomBumps[a]);
-    if(bumpDistance < closestBump){
-      closestBump = bumpDistance;
-    }
-  }
-  var bumpyValue = equation + (15 * Math.pow(Math.E/(30 * Math.sqrt(2 * Math.PI)), (Math.pow(closestBump, 2) / 1800)));
-  var finalValue = bumpyValue * (.01 * Math.random() + .99);
-  heights.push(finalValue);
-}
 
 function meteor(size, position){
   this.size = size;
@@ -115,13 +75,6 @@ function Spaceship(size, position, power) {
   this.speed = 0; //Current speed.
 }
 
-function drawRect(x, y, width, height, color){
-  context.beginPath();
-  context.fillStyle = color;
-  context.fillRect(x, y, width, height);
-  context.closePath();
-}
-
 Spaceship.prototype.draw = function(){
   context.save();
   context.translate(this.position.x, this.position.y);
@@ -166,30 +119,6 @@ Spaceship.prototype.draw = function(){
   context.closePath();
   drawRect(32, 10, 60, 20, "gray");
   drawText(Math.round(this.speed * 10)/10, 32, 28, "black");
-  /*
-  if(gameOver == true && !cracksDrawn){
-    for(var i = 0; i < 10; i ++){
-      var x = Math.random() * canvas.width;
-      var y = Math.random() * canvas.height;
-      var up = (Math.random() > .5);
-      var left = (Math.random() > .5);
-      context.beginPath();
-      context.strokeStyle = "white";
-      context.moveTo(x, y);
-      while(x < canvas.width && x > 0 && y < canvas.height && y > 0){
-        x += (Math.random() * 100 - ((left) ? 65 : 35));
-        y += (Math.random() * 100 - ((up) ? 60 : 40));
-        context.lineTo(x, y);
-      }
-      context.stroke();
-      context.closePath();
-    }
-    cracksDrawn = true;
-  }
-  */
-  if(gameOver == true){
-    drawRect(0, 0, canvas.width, canvas.height, "black");
-  }
 }
 
 Spaceship.prototype.update = function(){//All physics happen in here (And detection for losing).
@@ -277,9 +206,88 @@ Spaceship.prototype.update = function(){//All physics happen in here (And detect
       this.position.x = canvas.width + this.width - 1;
     }
   }
-  if(this.impactVelocity > 4){
+  if(this.impactVelocity > 3){
     gameOver = true;
   }
+}
+
+function draw(){
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    drawScene();
+
+    updateMeteors();
+
+    lander.update();
+
+    lander.draw();
+
+    if(!gameOver){
+      requestAnimationFrame(draw);
+    }else{
+      gameOverScreen();
+    }
+}
+
+document.addEventListener('keyup', keyUp);
+
+document.addEventListener('keydown', keyDown);
+
+document.addEventListener('click', onClick, false);
+
+var lander = new Spaceship(5, {x: canvas.width/2, y: 50}, 0.04);
+
+start();
+
+function randomizeTerrain(){
+  var peakXPositions = [];
+
+  for(var i = 0; i < 4; i ++){
+    peakXPositions.push(Math.floor(canvas.width * Math.random()));
+  }
+
+  var peakYPositions = [];
+
+  for(var i = 0; i < peakXPositions.length; i ++){
+    peakYPositions.push((Math.random()/4 + .75) * 100);
+  }
+
+  var randomBumps = [];
+
+  var numberOfBumps = Math.floor(20 * (.25 * Math.random() + .75));
+  for(var i = 0; i < numberOfBumps; i ++){
+    randomBumps.push(Math.floor(canvas.width * Math.random()));
+  }
+
+  for(var i = 0; i < canvas.width; i ++){
+    var closest = canvas.width;
+    var closestIndex = -1;
+    for(var a = 0; a < peakXPositions.length; a ++){
+      var distance = Math.abs(peakXPositions[a] - i);
+      if(distance < closest){
+        closest = distance;
+        closestIndex = a;
+      }
+    }
+    var equation = peakYPositions[closestIndex] * Math.pow(Math.E/(200 * Math.sqrt(2 * Math.PI)), (Math.pow(closest, 2) / 80000));
+    var closestBump = canvas.width;
+    for(var a = 0; a < numberOfBumps; a ++){
+      var bumpDistance = Math.abs(i - randomBumps[a]);
+      if(bumpDistance < closestBump){
+        closestBump = bumpDistance;
+      }
+    }
+    var bumpyValue = equation + (15 * Math.pow(Math.E/(30 * Math.sqrt(2 * Math.PI)), (Math.pow(closestBump, 2) / 1800)));
+    var finalValue = bumpyValue * (.01 * Math.random() + .99);
+    heights.push(finalValue);
+  }
+}
+
+function drawRect(x, y, width, height, color){
+  context.beginPath();
+  context.fillStyle = color;
+  context.fillRect(x, y, width, height);
+  context.closePath();
 }
 
 function drawText(text, x, y, color){
@@ -292,18 +300,22 @@ function drawText(text, x, y, color){
 
 function drawScene(){
   drawRect(0, 0, canvas.width, canvas.height, "black");
+  drawTerrain();
+}
+
+function drawTerrain(){
   for(var i = 0; i < heights.length; i ++){
     drawRect(i, canvas.height - heights[i], 1, heights[i], "gray");
   }
 }
 
 function gameOverScreen(){
-
+  drawRect(0, 0, canvas.width, canvas.height, "black");
+  drawText("Game Over", canvas.width/2 - 60, canvas.height/2, "red");
 }
 
-var lander = new Spaceship(5, {x: canvas.width/2, y: 50}, 0.04);
-
 function start(){
+  randomizeTerrain();
   drawScene();
   buttons.push({
     text: "easy",
@@ -333,6 +345,10 @@ function start(){
     x: canvas.width/2 - 45,
     y: canvas.height/2 + 50
   });
+  drawButtons();
+}
+
+function drawButtons(){
   buttons.forEach(function(e){
     context.beginPath();
     context.fillStyle = "white";
@@ -340,24 +356,6 @@ function start(){
     context.closePath();
     drawText(e.text, e.x + (e.width/2) - (e.text.length * 6.75), e.y + (e.height/2) + 8, "blue");
   });
-}
-
-function draw(){
-    context.clearRect(0, 0, canvas.width, canvas.height);
-
-    drawScene();
-
-    updateMeteors();
-
-    lander.update();
-
-    lander.draw();
-
-    if(!gameOver){
-      requestAnimationFrame(draw);
-    }else{
-      gameOverScreen();
-    }
 }
 
 function keyUp(e){
@@ -374,8 +372,6 @@ function keyUp(e){
     }
 }
 
-document.addEventListener('keyup', keyUp);
-
 function keyDown(e){
     switch(e.keyCode){
         case 37:
@@ -389,8 +385,6 @@ function keyDown(e){
             break;
     }
 }
-
-document.addEventListener('keydown', keyDown);
 
 function createMeteors(number){
   for(var i = 0; i < number; i ++){
@@ -412,9 +406,9 @@ function onClick(click){
   buttons.forEach(function(element){
     if (y > element.y && y < element.y + element.height && x > element.x && x < element.x + element.width) {
       if(element.text == "easy"){
-        lander.power = 0.04;
+        lander.power = 0.1;
         document.removeEventListener('click', onClick, false);
-        createMeteors(1);
+        createMeteors(50);
         draw();
       }
       if(element.text == "medium"){
@@ -433,7 +427,47 @@ function onClick(click){
   });
 }
 
-document.addEventListener('click', onClick, false);
+function randomizeTerrain(){
+  var peakXPositions = [];
 
-start();
+  for(var i = 0; i < 4; i ++){
+    peakXPositions.push(Math.floor(canvas.width * Math.random()));
+  }
+
+  var peakYPositions = [];
+
+  for(var i = 0; i < peakXPositions.length; i ++){
+    peakYPositions.push((Math.random()/4 + .75) * 100);
+  }
+
+  var randomBumps = [];
+
+  var numberOfBumps = Math.floor(20 * (.25 * Math.random() + .75));
+  for(var i = 0; i < numberOfBumps; i ++){
+    randomBumps.push(Math.floor(canvas.width * Math.random()));
+  }
+
+  for(var i = 0; i < canvas.width; i ++){
+    var closest = canvas.width;
+    var closestIndex = -1;
+    for(var a = 0; a < peakXPositions.length; a ++){
+      var distance = Math.abs(peakXPositions[a] - i);
+      if(distance < closest){
+        closest = distance;
+        closestIndex = a;
+      }
+    }
+    var equation = peakYPositions[closestIndex] * Math.pow(Math.E/(200 * Math.sqrt(2 * Math.PI)), (Math.pow(closest, 2) / 80000));
+    var closestBump = canvas.width;
+    for(var a = 0; a < numberOfBumps; a ++){
+      var bumpDistance = Math.abs(i - randomBumps[a]);
+      if(bumpDistance < closestBump){
+        closestBump = bumpDistance;
+      }
+    }
+    var bumpyValue = equation + (15 * Math.pow(Math.E/(30 * Math.sqrt(2 * Math.PI)), (Math.pow(closestBump, 2) / 1800)));
+    var finalValue = bumpyValue * (.01 * Math.random() + .99);
+    heights.push(finalValue);
+  }
+}
 
