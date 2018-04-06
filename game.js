@@ -185,8 +185,6 @@ Spaceship.prototype.update = function(){//All physics happen in here (And detect
 
     var topOnGround = (this.position.y + this.width/1.1) > (canvas.height - heights[Math.floor(this.position.x)]);
 
-    drawText(topOnGround, 100, 250, "gray");
-
     if(topOnGround){
       this.impactVelocity = Math.sqrt(Math.pow(this.velocity.x, 2) + Math.pow(this.velocity.y, 2));
       gameOver = true;
