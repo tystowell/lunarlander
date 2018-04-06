@@ -408,7 +408,7 @@ function onClick(click){
       if(element.text == "easy"){
         lander.power = 0.1;
         document.removeEventListener('click', onClick, false);
-        createMeteors(50);
+        createMeteors(1);
         draw();
       }
       if(element.text == "medium"){
