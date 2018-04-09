@@ -423,8 +423,137 @@ function onClick(click){
         createMeteors(3);
         draw();
       }
+      if(element.text == "free"){
+        lander.power = 0.03;
+        document.removeEventListener('click', onClick, false);
+        freeSelectScreen();
+      }
     }
   });
+}
+
+function freeSelectScreen(){
+  buttons = [];
+  buttons.push({
+    text: "low-g",
+    width: 90,
+    height: 30,
+    x: 10,
+    y: 70
+  });
+  buttons.push({
+    text: "mid-g",
+    width: 90,
+    height: 30,
+    x: 110,
+    y: 70
+  });
+  buttons.push({
+    text: "crazy",
+    width: 90,
+    height: 30,
+    x: 210,
+    y: 70
+  });
+  buttons.push({
+    text: "low-p",
+    width: 90,
+    height: 30,
+    x: canvas.width/2 - 130,
+    y: 70
+  });
+  buttons.push({
+    text: "mid-p",
+    width: 90,
+    height: 30,
+    x: canvas.width/2 - 30,
+    y: 70
+  });
+  buttons.push({
+    text: "AH",
+    width: 90,
+    height: 30,
+    x: canvas.width/2 + 70,
+    y: 70
+  });
+  buttons.push({
+    text: "1",
+    width: 90,
+    height: 30,
+    x: canvas.width - 300,
+    y: 70
+  });
+  buttons.push({
+    text: "3",
+    width: 90,
+    height: 30,
+    x: canvas.width - 200,
+    y: 70
+  });
+  buttons.push({
+    text: "5",
+    width: 90,
+    height: 30,
+    x: canvas.width - 100,
+    y: 70
+  });
+  buttons.push({
+    text: "start",
+    width: 90,
+    height: 30,
+    x: canvas.width/2 - 45,
+    y: canvas.height/2
+  })
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  drawScene();
+  drawText("Gravity:", 10, 30, "white");
+  drawText("Asteroids:", canvas.width - 300, 30, "white");
+  drawText("Power:", canvas.width/2 - 130, 30, "white");
+  drawButtons();
+  document.addEventListener('click', freeSelectDetect, false);
+}
+
+function freeSelectDetect(click){
+  var x = click.pageX - canvasLeftOffset;
+  var y = click.pageY - canvasTopOffset;
+  buttons.forEach(function(element){
+    if (y > element.y && y < element.y + element.height && x > element.x && x < element.x + element.width) {
+      if(element.text == "low-g"){
+        GRAVITY_FORCE = 0.005;
+      }
+      if(element.text == "mid-g"){
+        GRAVITY_FORCE = 0.01;
+      }
+      if(element.text == "crazy"){
+        GRAVITY_FORCE = 0.025;
+      }
+      if(element.text == "low-p"){
+        lander.power = 0.03;
+      }
+      if(element.text == "mid-p"){
+        lander.power = 0.075;
+      }
+      if(element.text == "AH"){
+        lander.power = 0.2;
+      }
+      if(element.text == "1"){
+        createMeteors(1);
+      }
+      if(element.text == "3"){
+        createMeteors(3);
+      }
+      if(element.text == "5"){
+        createMeteors(5);
+      }
+      if(element.text == "start"){
+        lander.position.y = canvas.height/2 + 10;
+        document.removeEventListener('click', freeSelectDetect, false);
+        draw();
+      }
+    }
+  });
+  drawRect(canvas.width - 100, 100, 100, 50, "black");
+  drawText(meteors.length, canvas.width - 100, 150, "white");
 }
 
 function randomizeTerrain(){
@@ -470,4 +599,3 @@ function randomizeTerrain(){
     heights.push(finalValue);
   }
 }
-
