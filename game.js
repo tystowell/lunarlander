@@ -2,19 +2,32 @@ var canvas = document.getElementById("game");
 var context = canvas.getContext("2d");
 var canvasLeftOffset = canvas.offsetLeft;
 var canvasTopOffset = canvas.offsetTop;
-var GRAVITY_FORCE = 0.01;
-var leftKey = false;
-var rightKey = false;
-var upKey = false;
-var gameOver = false;
-var buttons = [];
-var meteors = [];
-var lastRightLeg = false;
-var lastLeftLeg = false;
-var meteorVelocity = 7;
-var heights = [];
+var GRAVITY_FORCE = 0.01;//Gravity
+var leftKey = false;//If left key is being pressed
+var rightKey = false;//If right key is being pressed
+var upKey = false;//If up key is being pressed
+var gameOver = false; //If game is over
+var buttons = []; //Stores all current buttons.
+var meteors = []; //Stores all meteors.
+var lastRightLeg = false;//If right leg was on ground last frame
+var lastLeftLeg = false;//If left leg was on ground last frame
+var meteorVelocity = 7;//Meteor starting velecity
+var heights = [];//Stores terrain
 
-function meteor(size, position){
+function button(text, x, y){//Object to create buttons
+  this.width = 90;
+  this.height = 30;
+  this.x = x;
+  this.y = y;
+  this.text = text;
+}
+
+button.prototype.draw = function(){
+  drawRect(this.x, this.y, this.width, this.height, "white");
+  drawText(this.text, this.x + (this.width/2) - (this.text.length * 6.75), this.y + (this.height/2) + 8, "blue");
+}
+
+function meteor(size, position){//Object to create meteors
   this.size = size;
   this.position = position;
   this.velocity = {
@@ -23,7 +36,7 @@ function meteor(size, position){
   };
 }
 
-meteor.prototype.draw = function(){
+meteor.prototype.draw = function(){//Draws the meteor
   context.beginPath();
   context.arc(this.position.x, this.position.y, this.size, 0, 2 * Math.PI);
   context.fillStyle = "gray";
@@ -31,7 +44,7 @@ meteor.prototype.draw = function(){
   context.closePath();
 }
 
-meteor.prototype.update = function(){
+meteor.prototype.update = function(){//Physics for the meteor
   if(this.position.x > 0 && this.position.x < canvas.width){
     this.velocity.y += (GRAVITY_FORCE * (Math.random() * .5 + .75));
   }
@@ -52,7 +65,7 @@ meteor.prototype.update = function(){
   }
 }
 
-function Spaceship(size, position, power) {
+function Spaceship(size, position, power) {//Object to make lunar lander
   this.color = "white";
   this.width = size;
   this.height = size * 2.5;
@@ -75,7 +88,7 @@ function Spaceship(size, position, power) {
   this.speed = 0; //Current speed.
 }
 
-Spaceship.prototype.draw = function(){
+Spaceship.prototype.draw = function(){//Draws lunar lander
   context.save();
   context.translate(this.position.x, this.position.y);
   context.rotate(this.angle);
@@ -211,21 +224,21 @@ Spaceship.prototype.update = function(){//All physics happen in here (And detect
   }
 }
 
-function draw(){
-    context.clearRect(0, 0, canvas.width, canvas.height);
+function draw(){//The loop that is called repetadely.
+    context.clearRect(0, 0, canvas.width, canvas.height);//Clear screen
 
-    drawScene();
+    drawScene();//Draw terrain and background
 
-    updateMeteors();
+    updateMeteors();//Physics for meteors, and draws them.
 
-    lander.update();
+    lander.update();//Physics for lander.
 
-    lander.draw();
+    lander.draw();//Draws lander
 
     if(!gameOver){
-      requestAnimationFrame(draw);
+      requestAnimationFrame(draw);//Keep looping this section
     }else{
-      gameOverScreen();
+      gameOverScreen();//Stop
     }
 }
 
@@ -235,53 +248,9 @@ document.addEventListener('keydown', keyDown);
 
 document.addEventListener('click', onClick, false);
 
-var lander = new Spaceship(5, {x: canvas.width/2, y: 50}, 0.04);
+var lander = new Spaceship(5, {x: canvas.width/2, y: 50}, 0.04);//Creates lander
 
-start();
-
-function randomizeTerrain(){
-  var peakXPositions = [];
-
-  for(var i = 0; i < 4; i ++){
-    peakXPositions.push(Math.floor(canvas.width * Math.random()));
-  }
-
-  var peakYPositions = [];
-
-  for(var i = 0; i < peakXPositions.length; i ++){
-    peakYPositions.push((Math.random()/4 + .75) * 100);
-  }
-
-  var randomBumps = [];
-
-  var numberOfBumps = Math.floor(20 * (.25 * Math.random() + .75));
-  for(var i = 0; i < numberOfBumps; i ++){
-    randomBumps.push(Math.floor(canvas.width * Math.random()));
-  }
-
-  for(var i = 0; i < canvas.width; i ++){
-    var closest = canvas.width;
-    var closestIndex = -1;
-    for(var a = 0; a < peakXPositions.length; a ++){
-      var distance = Math.abs(peakXPositions[a] - i);
-      if(distance < closest){
-        closest = distance;
-        closestIndex = a;
-      }
-    }
-    var equation = peakYPositions[closestIndex] * Math.pow(Math.E/(200 * Math.sqrt(2 * Math.PI)), (Math.pow(closest, 2) / 80000));
-    var closestBump = canvas.width;
-    for(var a = 0; a < numberOfBumps; a ++){
-      var bumpDistance = Math.abs(i - randomBumps[a]);
-      if(bumpDistance < closestBump){
-        closestBump = bumpDistance;
-      }
-    }
-    var bumpyValue = equation + (15 * Math.pow(Math.E/(30 * Math.sqrt(2 * Math.PI)), (Math.pow(closestBump, 2) / 1800)));
-    var finalValue = bumpyValue * (.01 * Math.random() + .99);
-    heights.push(finalValue);
-  }
-}
+start();//Calls start function (not loop)
 
 function drawRect(x, y, width, height, color){
   context.beginPath();
@@ -298,12 +267,12 @@ function drawText(text, x, y, color){
   context.closePath();
 }
 
-function drawScene(){
+function drawScene(){//Background and terrain
   drawRect(0, 0, canvas.width, canvas.height, "black");
   drawTerrain();
 }
 
-function drawTerrain(){
+function drawTerrain(){//Terrain
   for(var i = 0; i < heights.length; i ++){
     drawRect(i, canvas.height - heights[i], 1, heights[i], "gray");
   }
@@ -314,51 +283,29 @@ function gameOverScreen(){
   drawText("Game Over", canvas.width/2 - 60, canvas.height/2, "red");
 }
 
-function start(){
+function start(){//First code to run
   randomizeTerrain();
   drawScene();
-  buttons.push({
-    text: "easy",
-    width: 90,
-    height: 30,
-    x: canvas.width/2 - 150,
-    y: canvas.height/2
-  });
-  buttons.push({
-    text: "medium",
-    width: 90,
-    height: 30,
-    x: canvas.width/2 - 45,
-    y: canvas.height/2
-  });
-  buttons.push({
-    text: "hard",
-    width: 90,
-    height: 30,
-    x: canvas.width/2 + 60,
-    y: canvas.height/2
-  });
-  buttons.push({
-    text: "free",
-    width: 90,
-    height: 30,
-    x: canvas.width/2 - 45,
-    y: canvas.height/2 + 50
-  });
+
+  var easy = new button("easy", canvas.width/2 - 150, canvas.height/2);
+  buttons.push(easy);
+  var medium = new button("medium", canvas.width/2 - 45, canvas.height/2);
+  buttons.push(medium);
+  var hard = new button("hard", canvas.width/2 + 60, canvas.height/2);
+  buttons.push(hard);
+  var free = new button("free", canvas.width/2 - 45, canvas.height/2 + 50);
+  buttons.push(free);
+
   drawButtons();
 }
 
 function drawButtons(){
-  buttons.forEach(function(e){
-    context.beginPath();
-    context.fillStyle = "white";
-    context.fillRect(e.x, e.y, e.width, e.height);
-    context.closePath();
-    drawText(e.text, e.x + (e.width/2) - (e.text.length * 6.75), e.y + (e.height/2) + 8, "blue");
+  buttons.forEach(function(b){
+    b.draw();
   });
 }
 
-function keyUp(e){
+function keyUp(e){//Called when a key goes up
     switch(e.keyCode){
         case 37:
             leftKey = false;
@@ -372,7 +319,7 @@ function keyUp(e){
     }
 }
 
-function keyDown(e){
+function keyDown(e){//Called when a key is pressed
     switch(e.keyCode){
         case 37:
             leftKey = true;
@@ -386,21 +333,21 @@ function keyDown(e){
     }
 }
 
-function createMeteors(number){
+function createMeteors(number){//Creates meteors
   for(var i = 0; i < number; i ++){
     var asteroid = new meteor(20, {x: -(i * 300 * (Math.random() * .5 + .75)), y: (Math.random() * 150 + 50)});
     meteors.push(asteroid);
   }
 }
 
-function updateMeteors(){
+function updateMeteors(){//Updates meteors
   meteors.forEach(function(asteroid){
     asteroid.update();
     asteroid.draw();
   });
 }
 
-function onClick(click){
+function onClick(click){//Looks for button clicks
   var x = click.pageX - canvasLeftOffset;
   var y = click.pageY - canvasTopOffset;
   buttons.forEach(function(element){
@@ -432,78 +379,18 @@ function onClick(click){
   });
 }
 
-function freeSelectScreen(){
+function freeSelectScreen(){//Sets up "free" screen
   buttons = [];
-  buttons.push({
-    text: "low-g",
-    width: 90,
-    height: 30,
-    x: 10,
-    y: 70
-  });
-  buttons.push({
-    text: "mid-g",
-    width: 90,
-    height: 30,
-    x: 110,
-    y: 70
-  });
-  buttons.push({
-    text: "crazy",
-    width: 90,
-    height: 30,
-    x: 210,
-    y: 70
-  });
-  buttons.push({
-    text: "low-p",
-    width: 90,
-    height: 30,
-    x: canvas.width/2 - 130,
-    y: 70
-  });
-  buttons.push({
-    text: "mid-p",
-    width: 90,
-    height: 30,
-    x: canvas.width/2 - 30,
-    y: 70
-  });
-  buttons.push({
-    text: "AH",
-    width: 90,
-    height: 30,
-    x: canvas.width/2 + 70,
-    y: 70
-  });
-  buttons.push({
-    text: "1",
-    width: 90,
-    height: 30,
-    x: canvas.width - 300,
-    y: 70
-  });
-  buttons.push({
-    text: "3",
-    width: 90,
-    height: 30,
-    x: canvas.width - 200,
-    y: 70
-  });
-  buttons.push({
-    text: "5",
-    width: 90,
-    height: 30,
-    x: canvas.width - 100,
-    y: 70
-  });
-  buttons.push({
-    text: "start",
-    width: 90,
-    height: 30,
-    x: canvas.width/2 - 45,
-    y: canvas.height/2
-  })
+  buttons.push(new button("low-g", 10, 70));
+  buttons.push(new button("mid-g", 110, 70));
+  buttons.push(new button("crazy", 210, 70));
+  buttons.push(new button("low-p", canvas.width/2 - 130, 70));
+  buttons.push(new button("mid-p", canvas.width/2 - 30, 70));
+  buttons.push(new button("AH", canvas.width/2 + 70, 70));
+  buttons.push(new button("1", canvas.width - 300, 70));
+  buttons.push(new button("3", canvas.width - 200, 70));
+  buttons.push(new button("5", canvas.width - 100, 70));
+  buttons.push(new button("start", canvas.width/2 - 45, canvas.height/2));
   context.clearRect(0, 0, canvas.width, canvas.height);
   drawScene();
   drawText("Gravity:", 10, 30, "white");
@@ -513,11 +400,11 @@ function freeSelectScreen(){
   document.addEventListener('click', freeSelectDetect, false);
 }
 
-function freeSelectDetect(click){
-  var x = click.pageX - canvasLeftOffset;
-  var y = click.pageY - canvasTopOffset;
+function freeSelectDetect(click){//Looks for clicks on "free" screen
+  var x = click.pageX - canvasLeftOffset;//X position of mouse altered so 0 is left of CANVAS, not page.
+  var y = click.pageY - canvasTopOffset;//Y position of mouse altered so 0 is top of CANVAS, not page.
   buttons.forEach(function(element){
-    if (y > element.y && y < element.y + element.height && x > element.x && x < element.x + element.width) {
+    if (y > element.y && y < element.y + element.height && x > element.x && x < element.x + element.width) {//If mouse is in a button on click
       if(element.text == "low-g"){
         GRAVITY_FORCE = 0.005;
       }
@@ -556,7 +443,7 @@ function freeSelectDetect(click){
   drawText(meteors.length, canvas.width - 100, 150, "white");
 }
 
-function randomizeTerrain(){
+function randomizeTerrain(){//Creates random terrain
   var peakXPositions = [];
 
   for(var i = 0; i < 4; i ++){
