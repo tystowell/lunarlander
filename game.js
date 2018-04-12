@@ -13,6 +13,7 @@ var lastRightLeg = false;//If right leg was on ground last frame
 var lastLeftLeg = false;//If left leg was on ground last frame
 var meteorVelocity = 7;//Meteor starting velecity
 var heights = [];//Stores terrain
+var score = 0;
 
 function button(text, x, y){//Object to create buttons
   this.width = 90;
@@ -132,6 +133,9 @@ Spaceship.prototype.draw = function(){//Draws lunar lander
   context.closePath();
   drawRect(32, 10, 60, 20, "gray");
   drawText(Math.round(this.speed * 10)/10, 32, 28, "black");
+  drawRect(94, 10, 160, 20, "gray");
+  drawText("Score:", 94, 28, "black");
+  drawText(score, 160, 28, "black");
 }
 
 Spaceship.prototype.update = function(){//All physics happen in here (And detection for losing).
@@ -165,6 +169,7 @@ Spaceship.prototype.update = function(){//All physics happen in here (And detect
         if(!leftLegOnGround){
           this.impactVelocity = Math.sqrt(Math.pow(this.velocity.x, 2) + Math.pow(this.velocity.y, 2));
           this.velocity.x -= 0.5 * this.velocity.x * this.velocity.y;
+          score = Math.floor(100 - ((this.impactVelocity * 10) + Math.abs(this.angle) * 10));
         }
       }
       var forceY = this.velocity.y;
@@ -184,6 +189,7 @@ Spaceship.prototype.update = function(){//All physics happen in here (And detect
         if(!rightLegOnGround){
           this.impactVelocity = Math.sqrt(Math.pow(this.velocity.x, 2) + Math.pow(this.velocity.y, 2));
           this.velocity.x -= 0.5 * this.velocity.x * this.velocity.y;
+          score = (this.impactVelocity * 10) + (this.angle * 10);
         }
       }
       var forceY = this.velocity.y;
@@ -486,3 +492,4 @@ function randomizeTerrain(){//Creates random terrain
     heights.push(finalValue);
   }
 }
+
