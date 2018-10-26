@@ -387,6 +387,7 @@ function onClick(click){//Looks for button clicks
 
 function freeSelectScreen(){//Sets up "free" screen
   buttons = [];
+  buttons.push(new button("no-g", 310, 70));
   buttons.push(new button("low-g", 10, 70));
   buttons.push(new button("mid-g", 110, 70));
   buttons.push(new button("crazy", 210, 70));
@@ -411,6 +412,9 @@ function freeSelectDetect(click){//Looks for clicks on "free" screen
   var y = click.pageY - canvasTopOffset;//Y position of mouse altered so 0 is top of CANVAS, not page.
   buttons.forEach(function(element){
     if (y > element.y && y < element.y + element.height && x > element.x && x < element.x + element.width) {//If mouse is in a button on click
+      if(element.text == "no-g"){
+        GRAVITY_FORCE = 0;
+      }
       if(element.text == "low-g"){
         GRAVITY_FORCE = 0.005;
       }
