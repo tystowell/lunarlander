@@ -387,7 +387,7 @@ function onClick(click){//Looks for button clicks
 
 function freeSelectScreen(){//Sets up "free" screen
   buttons = [];
-  buttons.push(new button("no-g", 310, 70));
+  buttons.push(new button("no-g", 10, 110));
   buttons.push(new button("low-g", 10, 70));
   buttons.push(new button("mid-g", 110, 70));
   buttons.push(new button("crazy", 210, 70));
